@@ -1,1 +1,1 @@
-kernprof -l -v diddy.pyx
+kernprof -l -v jps.py
