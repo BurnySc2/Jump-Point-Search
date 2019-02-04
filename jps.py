@@ -1,3 +1,8 @@
+"""
+With the same example path as in 'if __main__ == "name"', the A-Star needed 7 milliseconds
+
+"""
+
 
 # From http://code.activestate.com/recipes/578919-python-a-pathfinding-with-binary-heap/
 import numpy as np
@@ -421,7 +426,6 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                 direction_value = direction_dict_array[dir][current]
                 min_distance = min(abs(vert_dist), abs(hori_dist))
                 if - direction_value >= min_distance:
-                    print("herro")
                     target_node = (current[0] + min_distance * dir[0], current[1] + min_distance * dir[1])
                     distance_to_start = dist_to_start_array[current] + sqrt2 * direction_value
                     dist_to_start_array[target_node] = distance_to_start
