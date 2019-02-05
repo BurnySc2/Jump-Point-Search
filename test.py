@@ -6,10 +6,13 @@ This file was just made to test if there is any speedups by cython
 
 import numpy as np
 import jps
+print(jps.__file__)
+import jps_no_cache
+print(jps_no_cache.__file__)
 import time, math
 
-print(jps.__file__)
-from jps import jps_precompute, jps_search
+# from jps_no_cache import jps_precompute, jps_search
+from jps_no_cache import jps_search
 
 
 def heuristic_manhattan(a, b):
@@ -24,6 +27,7 @@ def heuristic_diagonal(a, b):
     dy = abs(b[1] - a[1])
     return dx + dx - 0.4142135623730951 * min(dx, dy)
 
+
 if __name__ == "__main__":
     pathing_grid = np.load("numpy_placement_better.npy")
     pathing_grid[pathing_grid == 0] = 9 # Turn all 0 values to 9 values which are walls
@@ -32,12 +36,12 @@ if __name__ == "__main__":
     height, width = len(pathing_grid), len(pathing_grid[0])
     print(height, width, pathing_grid.shape)
 
-    t0 = time.time()
-    precomputed = jps_precompute(pathing_grid, wall_value=9)
-    t1 = time.time()
-    print(f"{len(precomputed[0])} jump points, time taken: {round(t1-t0, 3)}s, jump points: {precomputed[0]}")
-    np.save("jump_points", list(precomputed[0]))
-    # np.save("no_connection", list(a[1]))
+    # t0 = time.time()
+    # precomputed = jps_precompute(pathing_grid, wall_value=9)
+    # t1 = time.time()
+    # print(f"{len(precomputed[0])} jump points, time taken: {round(t1-t0, 3)}s, jump points: {precomputed[0]}")
+    # np.save("jump_points", list(precomputed[0]))
+    # # np.save("no_connection", list(a[1]))
 
 
     spawn1 = expansions[6] # 35.5, 35.5
@@ -49,19 +53,33 @@ if __name__ == "__main__":
     # print(spawn2)
 
     # Pre compute once for numba to not screw with results
-    # heuristic_manhattan(spawn1, spawn2)
-    # heuristic_euclidean(spawn1, spawn2)
-    # heuristic_diagonal(spawn1, spawn2)
+    heuristic_manhattan(spawn1, spawn2)
+    heuristic_euclidean(spawn1, spawn2)
+    heuristic_diagonal(spawn1, spawn2)
 
     spawn1_correct = int(height - 1 - spawn1[1]+0.5), int(spawn1[0]-0.5)
     spawn2_correct = int(height - 1 - spawn2[1]+0.5), int(spawn2[0]-0.5)
 
-    # Testing top left to bottom right
-    spawn1_correct = (40, 30)
-    spawn2_correct = (150, 140)
+    # # Testing top left to bottom right
+    # spawn1_correct = (40, 30)
+    # spawn2_correct = (150, 140)
 
-    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, precomputed)
-    print(result)
+    test = np.array([
+        [0, 9, 0, 0, 0, 0],
+        [0, 9, 9, 9, 0, 0],
+        [0, 9, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+    ])
+    # print(test.shape)
+    p1 = (0, 0)
+    p2 = (0, 2)
+
+    # result = jps_search(p1, p2, test, wall_value=9)
+    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, wall_value=9)
+
+    print(f"Path: {result}")
+
+    np.save("path", result)
 
     # TODO: Path smoothener
 

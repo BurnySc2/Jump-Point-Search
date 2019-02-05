@@ -74,8 +74,8 @@ def jps_precompute(array: np.ndarray, wall_value = 0, debug=True):
     height, width = array.shape
 
     jump_points = set() # Contains all points that are jump points
-    # default_value = np.iinfo(data_type).min
     data_type = object # np.int16
+    # default_value = np.iinfo(data_type).min
     default_value = -10000000
     east_array = np.full_like(array, default_value, dtype=data_type)
     north_array = np.full_like(array, default_value, dtype=data_type)
@@ -381,7 +381,13 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
 
     while open_list:
         current = heapq.heappop(open_list)[1]
-        open_dict.pop(current)
+        open_dict.pop(current, None)
+
+        # if current in closed_set:
+        #     # This is a fix for when a node is added to the openlist a second time in line
+        #     # if distance_to_start < open_dict.get(target_node, math.inf):
+        #     continue
+
 
         """ Using pure python:  
         Time: 0.0015037059783935547
@@ -393,16 +399,17 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
             # Towards this direction lies a jump point
             direction_value = direction_dict_array[dir][current]
             target_node = (current[0] + direction_value * dir[0], current[1] + direction_value * dir[1])
-            # Not sure if check with closed_set is necessary
+            # Check if target node is in closed_set, which means we already visited that one (prevents going in a circle)
             if target_node not in closed_set:
                 distance_to_start = dist_to_start_array[current] + (sqrt2 * direction_value if dir in diagonals else direction_value)
                 if distance_to_start < open_dict.get(target_node, math.inf):
-                    if target_node in open_dict:
-                        # print(current, target_node, len(open_list))
-                        for index, node in enumerate(open_list):
-                            dist, point = node
-                            if point == target_node:
-                                open_list.pop(index)
+                    # if target_node in open_dict:
+                    #     # TODO: instead of deleting a longer way in the openlist, instead just ignore the node if it is in closed list already
+                    #     # print(current, target_node, len(open_list))
+                    #     for index, node in enumerate(open_list):
+                    #         dist, point = node
+                    #         if point == target_node:
+                    #             open_list.pop(index)
                     dist_to_start_array[target_node] = distance_to_start
                     if target_node == goal:
                         return generate_path(start, goal)
@@ -431,7 +438,7 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                     dist_to_start_array[target_node] = distance_to_start
                     if target_node == goal:
                         return generate_path(start, goal)
-                    distance_to_goal = heuristic(target_node, goal) # TODO: Goal should just lie horizontally or vertically from here! Remember to use square (no sqrt)
+                    distance_to_goal = heuristic(target_node, goal) # TODO: Goal should just lie horizontally or vertically from here!
                     total_distance = distance_to_start + distance_to_goal
                     heapq.heappush(open_list, (total_distance, target_node))
                     open_dict[target_node] = distance_to_start
