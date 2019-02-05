@@ -98,12 +98,13 @@ def jps_search(start, goal, array: np.ndarray, wall_value=0, debug=True):
             array[target] = 2
 
     def check_bounds_or_wall(point):
-        """ Returns True if is within bounds and not wall value, False if wall or bounds were hit """
+        """ Returns True if is within bounds and point is not wall value, False if wall or bounds were hit """
         if 0 <= point[0] < height and 0 <= point[1] < width and array[point] != wall_value:
             return True
         return False
 
     def check_jump_point(behind_point, start_point, next_point, dir, check_left=False):
+        """ Check if there is a force neighbor / jump point next to the 'start_point', checks left if 'check_left' is True, else right """
         left = left_turn[dir] if check_left else right_turn[dir]
         left_neighbor_start = (start_point[0] + left[0], start_point[1] + left[1])
         # left_neighbor_behind = (behind_point[0] + left[0], behind_point[1] + left[1])
@@ -114,13 +115,11 @@ def jps_search(start, goal, array: np.ndarray, wall_value=0, debug=True):
             return left_neighbor_current, False
 
 
-    # @profile
+    @profile
     def explore_cardinal_direction(start_point, direction):
-        """ Explore north, east, west, south only"""
+        """ Explore north, east, west, south only """
         next_point = start_point
-        distance_explored = 0
-        while 1:
-            distance_explored += 1
+        for distance_explored in range(1, 1000):
             current = next_point
             next_point = (next_point[0] + direction[0], next_point[1] + direction[1])
             behind_point = (current[0] - direction[0], current[1] - direction[1])
@@ -141,10 +140,8 @@ def jps_search(start, goal, array: np.ndarray, wall_value=0, debug=True):
                 right_jump_point, is_jump_point = check_jump_point(behind_point, current, next_point, direction, check_left=False)
                 distance_to_start = dist_to_start_dict[start_point] + distance_explored + 1
                 if is_jump_point:
-                    dist_to_start_dict[right_jump_point] = distance_to_start
                     distance_to_end = heuristic(right_jump_point, goal)
                     total_distance = distance_to_start + distance_to_end
-                    # total_distance = distance_to_start**2 + distance_to_end
                     # print(f"Found jump point {right_jump_point}, {right_turn[direction]}")
                     forced_neighbors[right_jump_point] = distance_to_start
                     heapq.heappush(open_list, (total_distance, right_jump_point, right_turn[direction]))
@@ -158,10 +155,8 @@ def jps_search(start, goal, array: np.ndarray, wall_value=0, debug=True):
                 left_jump_point, is_jump_point = check_jump_point(behind_point, current, next_point, direction, check_left=True)
                 distance_to_start = dist_to_start_dict[start_point] + distance_explored - 1 + sqrt2
                 if is_jump_point:
-                    # dist_to_start_dict[left_jump_point] = distance_to_start
                     distance_to_end = heuristic(left_jump_point, goal)
                     total_distance = distance_to_start + distance_to_end
-                    # total_distance = distance_to_start**2 + distance_to_end
                     # print(f"Found jump point {left_jump_point}, {left_turn[direction]}")
                     forced_neighbors[left_jump_point] = distance_to_start
                     heapq.heappush(open_list, (total_distance, left_jump_point, left_turn[direction]))
@@ -171,11 +166,13 @@ def jps_search(start, goal, array: np.ndarray, wall_value=0, debug=True):
 
             except IndexError: pass
 
+    # @profile
     def explore_diagonal_direction(start_point, direction):
         next_point = start_point
-        distance_explored = 0
-        while 1:
-            distance_explored += 1
+        # distance_explored = 0
+        for distance_explored in range(1, 10000000000):
+        # while 1:
+        #     distance_explored += 1
             current = next_point
             next_point = (next_point[0] + direction[0], next_point[1] + direction[1])
 
