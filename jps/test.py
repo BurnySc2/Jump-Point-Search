@@ -5,27 +5,15 @@ This file was just made to test if there is any speedups by cython
 """
 
 import numpy as np
-import jps
-print(jps.__file__)
-import jps_no_cache
-print(jps_no_cache.__file__)
+# import jps
+# print(jps.__file__)
+import jps_nc
+print(jps_nc.__file__)
 import time, math
 
 # from jps_no_cache import jps_precompute, jps_search
-from jps_no_cache import jps_search
+from jps_nc import jps_search
 
-
-def heuristic_manhattan(a, b):
-    return abs(b[0] - a[0]) + abs(b[1] - a[1])
-
-def heuristic_euclidean(a, b):
-    return math.pow(b[0] - a[0], 2) + math.pow(b[1] - a[1], 2)
-
-def heuristic_diagonal(a, b):
-    # http://theory.stanford.edu/~amitp/GameProgramming/Heuristics.html#diagonal-distance
-    dx = abs(b[0] - a[0])
-    dy = abs(b[1] - a[1])
-    return dx + dx - 0.4142135623730951 * min(dx, dy)
 
 
 if __name__ == "__main__":
@@ -52,17 +40,17 @@ if __name__ == "__main__":
     # print(spawn1)
     # print(spawn2)
 
-    # Pre compute once for numba to not screw with results
-    heuristic_manhattan(spawn1, spawn2)
-    heuristic_euclidean(spawn1, spawn2)
-    heuristic_diagonal(spawn1, spawn2)
+    # # Pre compute once for numba to not screw with results
+    # heuristic_manhattan(spawn1, spawn2)
+    # heuristic_euclidean(spawn1, spawn2)
+    # heuristic_diagonal(spawn1, spawn2)
 
     spawn1_correct = int(height - 1 - spawn1[1]+0.5), int(spawn1[0]-0.5)
     spawn2_correct = int(height - 1 - spawn2[1]+0.5), int(spawn2[0]-0.5)
 
-    # # Testing top left to bottom right
-    # spawn1_correct = (40, 30)
-    # spawn2_correct = (150, 140)
+    # Testing top left to bottom right
+    spawn1_correct = (40, 30)
+    spawn2_correct = (150, 140)
 
     test = np.array([
         [0, 9, 0, 0, 0, 0],
@@ -75,9 +63,11 @@ if __name__ == "__main__":
     p2 = (0, 2)
 
     # result = jps_search(p1, p2, test, wall_value=9)
-    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, wall_value=9, debug=False)
+    t0 = time.time()
+    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, wall_value=9, debug=0)
+    t1 = time.time()
 
-    print(f"Path: {result}")
+    print(f"Time: {t1-t0}, Path: {result}")
 
     np.save("path", result)
 

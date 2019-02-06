@@ -1,0 +1,1 @@
+cython -a jps_nc_cython.pyx

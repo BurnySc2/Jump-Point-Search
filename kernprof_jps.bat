@@ -1,1 +1,0 @@
-kernprof -l -v jps.py
