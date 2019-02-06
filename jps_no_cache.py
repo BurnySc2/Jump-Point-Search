@@ -115,7 +115,7 @@ def jps_search(start, goal, array: np.ndarray, wall_value=0, debug=True):
             return left_neighbor_current, False
 
 
-    @profile
+    # @profile
     def explore_cardinal_direction(start_point, direction):
         """ Explore north, east, west, south only """
         next_point = start_point
@@ -202,7 +202,7 @@ def jps_search(start, goal, array: np.ndarray, wall_value=0, debug=True):
 
     t0 = time.time()
 
-    print(start, goal)
+    # print(start, goal)
 
     while open_list:
         _, current, direction = heapq.heappop(open_list)
@@ -262,14 +262,15 @@ To not explore the same positions twice, we put the diagonal explorations by off
                 add_point_to_explored(current, current_half_left_pos, 1, True)
                 explore_diagonal_direction(current_half_left_pos, current_half_left)
 
-            if goal in dist_to_start_dict:
-                return generate_path(start, goal)
+        if goal in dist_to_start_dict:
+            return generate_path(start, goal)
 
         closed_set.add(current)
 
-    # print(array)
-    np.save("closed_set", list(closed_set))
-    # print("written to file")
+    # if debug:
+    #     # print(array)
+    #     np.save("closed_set", list(closed_set))
+    #     # print("written to file")
 
 
 

@@ -75,7 +75,7 @@ if __name__ == "__main__":
     p2 = (0, 2)
 
     # result = jps_search(p1, p2, test, wall_value=9)
-    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, wall_value=9)
+    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, wall_value=9, debug=False)
 
     print(f"Path: {result}")
 

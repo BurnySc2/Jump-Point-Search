@@ -496,6 +496,10 @@ if __name__ == "__main__":
     spawn1_correct = int(height - 1 - spawn1[1]+0.5), int(spawn1[0]-0.5)
     spawn2_correct = int(height - 1 - spawn2[1]+0.5), int(spawn2[0]-0.5)
 
+    # # # Testing top left to bottom right
+    # spawn1_correct = (40, 30)
+    # spawn2_correct = (150, 140)
+
     result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, precomputed)
     print(f"Path: {result}")
 
