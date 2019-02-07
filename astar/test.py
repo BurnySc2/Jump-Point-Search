@@ -52,11 +52,12 @@ if __name__ == "__main__":
     spawn2_correct = (150, 140)
 
     # amount = 100
+    solution, cost, closed_set = astar(spawn1_correct, spawn2_correct, pathing_grid, diagonal=1, debug=True)
     t0 = time.time()
     # for i in range(amount):
     #     # solution, cost, closed_set = astar((0, 0), (10, 13), nmap, diagonal=True)
     #     solution, cost, closed_set = astar(spawn1_correct, spawn2_correct, pathing_grid, diagonal=True)
-    solution, cost, closed_set = astar(spawn1_correct, spawn2_correct, pathing_grid, diagonal=1)
+    solution, cost, closed_set = astar(spawn1_correct, spawn2_correct, pathing_grid, diagonal=1, debug=True)
     t1 = time.time()
     np.save("path.npy", solution) # list(closed_set))
     print(f"Time: {t1-t0}\nTotal path length: {cost}\nPath: {solution}")

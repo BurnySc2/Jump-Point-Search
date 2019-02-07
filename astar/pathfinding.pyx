@@ -71,6 +71,7 @@ def astar((int, int) start, (int, int) goal, np.ndarray array, int diagonal=0, b
     # Defining list, set, dict only seems to make it slower
 
     # https://cython.readthedocs.io/en/latest/src/userguide/memoryviews.html#using-memoryviews
+    # array_height, array_width = array.shape
     array_height, array_width = len(array), len(array[0])
 
     # Creates integer array

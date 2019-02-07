@@ -1,0 +1,1 @@
+cython -a pathfinding.pyx
