@@ -14,9 +14,6 @@ import time
 import math
 from typing import Union, List, Set, Dict, Tuple
 
-# from cpython cimport bool
-# cimport numpy as np
-# print(__file__)
 
 def heuristic_manhattan(a: Tuple[int, int], b: Tuple[int, int]):
     return abs(b[0] - a[0]) + abs(b[1] - a[1])
@@ -52,9 +49,9 @@ def calc_point(point: Tuple[int, int], offset: Tuple[int, int], subtract: int=0)
 sqrt2 = 2**0.5
 
 
-def add_point_to_explored(source: Tuple[int, int], target: Tuple[int, int], distance: int, is_diagonal: int, previous_point_dict: Dict[Tuple[int, int], Tuple[int, int]], dist_to_start_dict: [Tuple[int, int], float], closed_set: Set[Tuple[int, int]]):
+def add_point_to_explored(source: Tuple[int, int], target: Tuple[int, int], distance: int, is_diagonal: int, previous_point_dict: Dict[Tuple[int, int], Tuple[int, int]], dist_to_start_dict: Dict[Tuple[int, int], float], closed_set: Set[Tuple[int, int]]):
     global sqrt2
-    if source != target:
+    if source[0] != target[0] or source[1] != target[1]:
         previous_point_dict[target[0], target[1]] = source
         value = sqrt2 if is_diagonal else 1
         dist_to_start_dict[target[0], target[1]] = dist_to_start_dict[source[0], source[1]] + distance * value
@@ -67,7 +64,7 @@ def check_jump_point(behind_point: Tuple[int, int], start_point: Tuple[int, int]
     left_neighbor_start = calc_point(start_point, left)
     # left_neighbor_behind = (behind_point[0] + left[0], behind_point[1] + left[1])
     left_neighbor_current = (next_point[0] + left[0], next_point[1] + left[1])
-    if array[left_neighbor_start] == wall_value and array[left_neighbor_current] != wall_value and array[behind_point] != wall_value:# and (array[left_neighbor_behind] == wall_value or min(left_neighbor_behind) < 0):
+    if array[left_neighbor_start] == wall_value and array[left_neighbor_current] != wall_value and array[behind_point] != wall_value:
         return left_neighbor_current, 1
     else:
         return left_neighbor_current, 0
@@ -85,7 +82,7 @@ def explore_cardinal_direction(goal: Tuple[int, int], start_point: Tuple[int, in
         # next_point = (next_point[0] + direction[0], next_point[1] + direction[1])
         # behind_point = (current[0] - direction[0], current[1] - direction[1])
 
-        if current == goal:
+        if current[0] == goal[0] and current[1] == goal[1]:
             add_point_to_explored(start_point, goal, distance_explored, False, previous_point_dict, dist_to_start_dict, closed_set)
             return True
 
@@ -225,7 +222,7 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
         # print(len(open_list), len(closed_set), current, direction)
 
         # None is set for starting point
-        if current == start:
+        if current[0] == start[0] and current[1] == start[1]:
             for direction in directions:
                 if is_diagonal(direction):
                 # if direction in diagonals:
@@ -288,6 +285,7 @@ To not explore the same positions twice, we put the diagonal explorations by off
 
 
 
+
 if __name__ == "__main__":
     pathing_grid = np.load("numpy_placement_better.npy")
     pathing_grid[pathing_grid == 0] = 9 # Turn all 0 values to 9 values which are walls
@@ -320,9 +318,9 @@ if __name__ == "__main__":
     spawn1_correct = int(height - 1 - spawn1[1]+0.5), int(spawn1[0]-0.5)
     spawn2_correct = int(height - 1 - spawn2[1]+0.5), int(spawn2[0]-0.5)
 
-    # # Testing top left to bottom right
-    # spawn1_correct = (40, 30)
-    # spawn2_correct = (150, 140)
+    # Testing top left to bottom right
+    spawn1_correct = (40, 30)
+    spawn2_correct = (150, 140)
 
     test = np.array([
         [0, 9, 0, 0, 0, 0],
@@ -330,14 +328,16 @@ if __name__ == "__main__":
         [0, 9, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0],
     ])
-    print(test.shape)
+    # print(test.shape)
     p1 = (0, 0)
     p2 = (0, 2)
 
     # result = jps_search(p1, p2, test, wall_value=9)
-    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, wall_value=9)
+    t0 = time.time()
+    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, wall_value=9, debug=0)
+    t1 = time.time()
 
-    print(f"Path: {result}")
+    print(f"Time: {t1-t0}, Path: {result}")
 
     np.save("path", result)
 

@@ -5,14 +5,9 @@ This file was just made to test if there is any speedups by cython
 """
 
 import numpy as np
-# import jps
-# print(jps.__file__)
-import jps_nc
-print(jps_nc.__file__)
 import time, math
 
-# from jps_no_cache import jps_precompute, jps_search
-from jps_nc import jps_search
+from jps import jps_search
 
 
 
