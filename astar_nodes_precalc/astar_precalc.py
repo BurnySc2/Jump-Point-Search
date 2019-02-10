@@ -55,7 +55,7 @@ def sign(n):
 
 
 # @profile
-def jps_precompute(array: np.ndarray, wall=0, debug=True):
+def astar_precompute(array: np.ndarray, wall=0, debug=True):
     """ Precompute all positions in the array and calculate jump points and distances to walls
     8 Arrays, one for each direction
     Negative values indicate the distance to the wall in that direction
@@ -160,7 +160,7 @@ def jps_precompute(array: np.ndarray, wall=0, debug=True):
 
 
 # @profile
-def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray, jump_points: Dict[Tuple[int, int], List[Tuple[Tuple[int, int], float]]], wall=9, debug=True) -> List[Tuple[int, int]]:
+def astar_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray, jump_points: Dict[Tuple[int, int], List[Tuple[Tuple[int, int], float]]], wall=9, debug=True) -> List[Tuple[int, int]]:
     """ Input values:
     start: a tuple (y, x)
     goal: a tuple(y, x)
