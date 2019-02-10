@@ -15,6 +15,7 @@ import math
 from typing import Union, List, Set, Dict, Tuple
 
 
+
 def heuristic_manhattan(a: Tuple[int, int], b: Tuple[int, int]):
     return abs(b[0] - a[0]) + abs(b[1] - a[1])
 

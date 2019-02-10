@@ -29,7 +29,8 @@ cpdef int sign(int n):
     if n < 0: return -1
     return 0
 
-cpdef int is_diagonal(direction):
+# Cant remove second argument or else the compiler seems to be not working
+cpdef int is_diagonal((int, int) direction, int placeholder=1):
     if abs(direction[0]) + abs(direction[1]) > 0:
         return 1
     return 0
@@ -51,8 +52,6 @@ cpdef (int, int) calc_point((int, int) point, (int, int) offset, int subtract = 
         return (point[0] + offset[0], point[1] + offset[1])
     return (point[0] - offset[0], point[1] - offset[1])
 
-cdef float sqrt2
-sqrt2 = 2**0.5
 
 
 
