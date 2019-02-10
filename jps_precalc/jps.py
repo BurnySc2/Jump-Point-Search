@@ -111,29 +111,21 @@ def jps_precompute(array: np.ndarray, wall=0, debug=True):
     }
 
     # @profile
-    def explore_all_directions(pos_y, pos_x):
-        for dir in directions:
-            if dir in diagonals:
-                break
-            explore_direction(pos_y, pos_x, dir)
-
-    # @profile
     def explore_direction(pos_y, pos_x, dir):
-        current = (pos_y, pos_x)
-        while 1:
-            prev = current
-            current = (current[0] + dir[0], current[1] + dir[1])
+        if dir[0] != 0:
+            pathable = np.argwhere(array[:, pos_x] != wall).tolist()
+            positions_pathable: Set[Tuple[int, int]] = {(y[0], pos_x) for y in pathable}
+        else:
+            pathable = np.argwhere(array[pos_y, :] != wall).tolist()
+            positions_pathable: Set[Tuple[int, int]] = {(pos_y, x[0]) for x in pathable}
 
-            # Ignore starting position, takes care of too many diagonal jump points in a row
-            if prev == (pos_y, pos_x):
+        for current in positions_pathable:
+            next = (current[0] + dir[0], current[1] + dir[1])
+            if next not in positions_pathable or next in jump_points:
                 continue
-
-            # Use try except to check if bounds were hit
-            try:
-                # Check if wall was hit
-                if array[current] == wall:
-                    break
-            except IndexError: break
+            previous = (current[0] - dir[0], current[1] - dir[1])
+            if previous not in positions_pathable:
+                continue
 
             # TODO: When coming from a certain direction, the jump point only then has to be visited
             # See 9:45 https://www.gdcvault.com/play/1022094/JPS-Over-100x-Faster-than%20jps+%20goal%20bounding
@@ -142,35 +134,35 @@ def jps_precompute(array: np.ndarray, wall=0, debug=True):
             # Check if wall is on right and the next place on the right is not a wall, then this is a jump point
             try:
                 right = right_turn[dir]
-                right_neighbor = (prev[0] + right[0], prev[1] + right[1])
+                right_neighbor = (current[0] + right[0], current[1] + right[1])
                 if array[right_neighbor] == wall and array[right_neighbor[0] + dir[0], right_neighbor[1] + dir[1]] != wall:
-                    jump_points.add(current)
+                    jump_points.add(next)
+                    continue
             except IndexError: pass
 
             try:
                 # Check if wall is on left and the next place on the left is not a wall, then this is a jump point
                 left = left_turn[dir]
-                left_neighbor = (prev[0] + left[0], prev[1] + left[1])
+                left_neighbor = (current[0] + left[0], current[1] + left[1])
                 if array[left_neighbor] == wall and array[left_neighbor[0] + dir[0], left_neighbor[1] + dir[1]] != wall:
-                    jump_points.add(current)
+                    jump_points.add(next)
             except IndexError: pass
 
     # Find all possible jump points
-    """ All J are jump points, diagonal movement through tight path is not allowed
+    """ Origin is on the left, all J are jump points, diagonal movement through tight path is not allowed
     OOO OOO OOO OOO
     OOJ OJO OOX OJX
     OXO XOO OXO XOO
     """
-    # for y, row in enumerate(array):
-    #     for x, value in enumerate(row):
-    #         if value == wall:
-    #             continue
-    #         # Node is not a wall, explore
-    #         explore_all_directions(y, x)
-    # The following is only slightly faster if the dtype is "object"
-    pathable_array = np.argwhere(array != wall)
-    for values in pathable_array:
-        explore_all_directions(*values)
+    # Explore east and west starting at bounds
+    for y in range(0, height):
+        explore_direction(y, 0, (0, 1))
+        explore_direction(y, width - 1, (0, -1))
+    # Explore north and south starting at bounds
+    for x in range(0, width):
+        explore_direction(0, x, (1, 0))
+        explore_direction(height - 1, x, (-1, 0))
+
 
     def mark_wall_distance(start_point, direction, distance):
         for dist in range(distance):
@@ -346,8 +338,8 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
     closed_set = set()
     heuristic = heuristic_euclidean
     heapq.heappush(open_list, (heuristic(start, goal), start))
-    open_dict[start] = 0 # Could be replaced with a numpy array? Which one is faster
-    dist_to_start_dict[start] = 0
+    open_dict = {start: 0}
+    dist_to_start_dict = {start: 0}
 
     print(start, goal, open_list)
     t0 = time.time()
@@ -355,7 +347,7 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
     def generate_path(p1, p2):
         if debug:
             t1 = time.time()
-            print(f"Path found!\nTime: {t1-t0}\nOpen list: {len(open_list)}\nClosed list: {len(closed_set)}\nDist to start: {dist_to_start_dict[p2]}")
+            print(f"Path found!\nTime: {t1-t0} s\nOpen list: {len(open_list)}\nClosed list: {len(closed_set)}\nDist to start: {dist_to_start_dict[p2]}")
         current = p2
         path = []
         while current != p1:
@@ -373,6 +365,12 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
         Open list: 98
         Closed list: 25
         Dist to start: 179.29646455628173
+        
+        470 jump points, time taken: 0.8718829154968262s
+        Time: 0.0005016326904296875
+        Open list: 95
+        Closed list: 22
+        Dist to start: 136.5269119345812
         """
         for dir in directions_greater_zero[current]:
             # Towards this direction lies a jump point
@@ -381,8 +379,8 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
             # Check if target node is in closed_set, which means we already visited that one (prevents going in a circle)
             if target_node not in closed_set:
                 distance_to_start = dist_to_start_dict[current] + (sqrt2 * direction_value if dir in diagonals else direction_value)
-                # Check if target node is already in openlist, and if it is, then check if current distance to start is lower than the target one
-                if distance_to_start < open_dict.get(target_node, math.inf):
+                # Check if target node is already in openlist, and if it is, then check if current calculated distance to start is lower than the previously calculated distance on the same node/point
+                if distance_to_start < dist_to_start_dict.get(target_node, math.inf):
                     came_from[target_node] = current
                     dist_to_start_dict[target_node] = distance_to_start
                     if target_node == goal:
@@ -390,7 +388,7 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                     distance_to_goal = heuristic(target_node, goal)
                     total_distance = distance_to_start + distance_to_goal
                     heapq.heappush(open_list, (total_distance, target_node))
-                    open_dict[target_node] = distance_to_start
+                    # open_dict[target_node] = distance_to_start
 
 
 
@@ -417,14 +415,6 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                     distance_to_goal = heuristic(target_node, goal) # TODO: Goal should just lie horizontally or vertically from here!
                     total_distance = distance_to_start + distance_to_goal
                     heapq.heappush(open_list, (total_distance, target_node))
-                    open_dict[target_node] = distance_to_start
-                    # vert_dist2 = goal[0] - target_node[0]
-                    # hori_dist2 = goal[1] - target_node[1]
-                    # dir2 = (sign(vert_dist2), sign(hori_dist2))
-                    # direction_value2 = direction_dict_array[dir2][target_node]
-                    # if abs(direction_value2) >= max(abs(vert_dist2), abs(hori_dist2)):
-                    #     # Path found!
-                    #     pass
 
             elif dir not in diagonals and dir == (sign(vert_dist), sign(hori_dist)):
                 """ If the target lies horizontally or vertically, check if the path to goal is clear
@@ -435,7 +425,6 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                 max_distance = max(abs(vert_dist), abs(hori_dist))
                 if - direction_value >= max_distance:
                     distance_to_start = dist_to_start_dict[current] + max_distance
-                    # open_dict[target_node] = distance_to_start
                     came_from[goal] = current
                     dist_to_start_dict[goal] = distance_to_start
                     return generate_path(start, goal)
@@ -456,7 +445,7 @@ if __name__ == "__main__":
     t0 = time.time()
     precomputed = jps_precompute(pathing_grid, wall=9)
     t1 = time.time()
-    print(f"{len(precomputed[0])} jump points, time taken: {t1-t0}s")
+    print(f"{len(precomputed[0])} jump points, time taken: {t1-t0} s")
     # print(f"{len(precomputed[0])} jump points, time taken: {round(t1-t0, 3)}s, jump points: {precomputed[0]}")
     np.save("jump_points", list(precomputed[0]))
     # np.save("no_connection", list(a[1]))
@@ -474,10 +463,10 @@ if __name__ == "__main__":
     spawn2_correct = int(height - 1 - spawn2[1]+0.5), int(spawn2[0]-0.5)
 
     # # # Testing top left to bottom right
-    # spawn1_correct = (40, 30)
-    # spawn2_correct = (150, 140)
+    spawn1_correct = (40, 30)
+    spawn2_correct = (150, 140)
 
-    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, precomputed)
+    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, precomputed, debug=True)
     print(f"Path: {result}")
 
     # TODO: Path smoothener
