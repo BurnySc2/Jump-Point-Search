@@ -176,7 +176,8 @@ def astar_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarra
 
         jump_points[p1] = []
         for p2 in jump_points.keys():
-            if heuristic_euclidean(p1, p2) > 200: continue
+            # The following line can make it run double as fast, but might miss a point connection
+            # if heuristic_euclidean(p1, p2) > 200: continue
             could_draw_line = can_draw_line(*p1, *p2, array, 9)
             if could_draw_line:
                 distance = heuristic_euclidean(p1, p2)
@@ -258,7 +259,7 @@ if __name__ == "__main__":
     print(height, width, pathing_grid.shape)
 
     t0 = time.time()
-    jump_points = jps_precompute(pathing_grid, wall=9)
+    jump_points = astar_precompute(pathing_grid, wall=9)
     t1 = time.time()
 
     spawn1 = expansions[6] # 35.5, 35.5
@@ -276,7 +277,7 @@ if __name__ == "__main__":
     # spawn1_correct = (40, 30)
     # spawn2_correct = (150, 140)
     t0 = time.time()
-    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, jump_points)
+    result = astar_search(spawn1_correct, spawn2_correct, pathing_grid, jump_points)
     t1 = time.time()
     print(f"Path calculated!\nTime: {t1-t0}\nPath: {result}")
 
