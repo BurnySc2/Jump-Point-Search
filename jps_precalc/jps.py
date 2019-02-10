@@ -32,23 +32,6 @@ def sign(n):
     if n < 0: return -1
     return 0
 
-# start = (0, 0)
-# end = (4, 9)
-# y, x = get_line(start, end)
-# y1, x1 = get_line(end, start)
-# y2, x2, val = _line_aa(*start, *end)
-# assert x == x1
-# assert y == y1
-# b = np.zeros((5, 10))
-# b[y, x] = 1
-# c = np.zeros((5, 10))
-# c[y2, x2] = 1
-# print(b)
-# print(c)
-# y, x = np.hsplit(a, 2)
-# print(x)
-
-# exit()
 
 # @profile
 def jps_precompute(array: np.ndarray, wall=0, debug=True):
@@ -253,8 +236,11 @@ def jps_precompute(array: np.ndarray, wall=0, debug=True):
         set_directional_distances(jump_point)
 
     # Set the distances to walls for all unconnected points
-    for y, row in enumerate(array):
-        for x, value in enumerate(row):
+    for y in range(height):
+        for x in range(width):
+            value = array[y, x]
+    # for y, row in enumerate(array):
+    #     for x, value in enumerate(row):
             if value == wall:
                 continue
             set_directional_distances((y, x), connect_to_distant_jump_points_and_walls=True)
@@ -308,47 +294,21 @@ def jps_precompute(array: np.ndarray, wall=0, debug=True):
 
 
 
+
+
 # @profile
 def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray, precomputed_arrays: List[Union[set, np.ndarray]], debug=True):
     """ Input values:
     start: a tuple (y, x)
     goal: a tuple(y, x)
     array: a numpy array with shape (height, width)"""
-    jump_points: set
+    jump_points: Set[Tuple[int, int]]
     jump_points, directions_greater_zero, directions_less_zero, east_array, north_array, west_array, south_array, south_east_array, south_west_array, north_west_array, north_east_array = precomputed_arrays
 
     height, width = array.shape
 
-    directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
+    # directions = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (1, -1), (-1, 1), (-1, -1)]
     diagonals = {(1, 1), (1, -1), (-1, 1), (-1, -1)}
-    right_turn = {
-        # (y, x)
-        # Vertical + horizontal
-        (0, 1): (1, 0), # East
-        (1, 0): (0, -1), # South
-        (0, -1): (-1, 0), # West
-        (-1, 0): (0, 1), # North
-        # Diagonal
-        (1, 1): (1, -1), # Southeast
-        (1, -1): (-1, -1), # Southwest
-        (-1, -1): (-1, 1), # Northwest
-        (-1, 1): (1, 1), # Northeast
-    }
-    left_turn = {value: key for key, value in right_turn.items()}
-    half_right_turn = {
-        # 45 degrees turns, required for diagonal exploration
-        # From Vertical + horizontal
-        (0, 1): (1, 1), # East
-        (1, 0): (1, -1), # South
-        (0, -1): (-1, -1), # West
-        (-1, 0): (-1, 1), # North
-        # From Diagonal
-        (1, 1): (1, 0), # Southeast
-        (1, -1): (-1, -1), # Southwest
-        (-1, -1): (-1, 1), # Northwest
-        (-1, 1): (1, 1), # Northeast
-    }
-    half_left_turn = {value: key for key, value in half_right_turn.items()}
     direction_dict_array = {
         (0, 1): east_array,
         (-1, 0): north_array,
@@ -385,7 +345,7 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
     came_from = {}
     closed_set = set()
     heuristic = heuristic_euclidean
-    heapq.heappush(open_list, (heuristic_euclidean(start, goal), start))
+    heapq.heappush(open_list, (heuristic(start, goal), start))
     open_dict[start] = 0 # Could be replaced with a numpy array? Which one is faster
     dist_to_start_dict[start] = 0
 
@@ -407,8 +367,6 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
 
     while open_list:
         current = heapq.heappop(open_list)[1]
-        # if current in closed_set:
-        #     continue
 
         """ Using pure python:  
         Time: 0.0005013942718505859
@@ -426,9 +384,9 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                 # Check if target node is already in openlist, and if it is, then check if current distance to start is lower than the target one
                 if distance_to_start < open_dict.get(target_node, math.inf):
                     came_from[target_node] = current
+                    dist_to_start_dict[target_node] = distance_to_start
                     if target_node == goal:
                         return generate_path(start, goal)
-                    dist_to_start_dict[target_node] = distance_to_start
                     distance_to_goal = heuristic(target_node, goal)
                     total_distance = distance_to_start + distance_to_goal
                     heapq.heappush(open_list, (total_distance, target_node))
@@ -452,8 +410,8 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                 if - direction_value >= min_distance:
                     target_node = (current[0] + min_distance * dir[0], current[1] + min_distance * dir[1])
                     distance_to_start = dist_to_start_dict[current] + sqrt2 * direction_value
-                    dist_to_start_dict[target_node] = distance_to_start
                     came_from[target_node] = current
+                    dist_to_start_dict[target_node] = distance_to_start
                     if target_node == goal:
                         return generate_path(start, goal)
                     distance_to_goal = heuristic(target_node, goal) # TODO: Goal should just lie horizontally or vertically from here!
@@ -478,11 +436,14 @@ def jps_search(start: Tuple[int, int], goal: Tuple[int, int], array: np.ndarray,
                 if - direction_value >= max_distance:
                     distance_to_start = dist_to_start_dict[current] + max_distance
                     # open_dict[target_node] = distance_to_start
-                    dist_to_start_dict[goal] = distance_to_start
                     came_from[goal] = current
+                    dist_to_start_dict[goal] = distance_to_start
                     return generate_path(start, goal)
 
         closed_set.add(current)
+
+
+
 
 if __name__ == "__main__":
     pathing_grid = np.load("numpy_placement_better.npy")
@@ -508,11 +469,6 @@ if __name__ == "__main__":
     # print(expansions)
     # print(spawn1)
     # print(spawn2)
-
-    # Pre compute once for numba to not screw with results
-    heuristic_manhattan(spawn1, spawn2)
-    heuristic_euclidean(spawn1, spawn2)
-    heuristic_diagonal(spawn1, spawn2)
 
     spawn1_correct = int(height - 1 - spawn1[1]+0.5), int(spawn1[0]-0.5)
     spawn2_correct = int(height - 1 - spawn2[1]+0.5), int(spawn2[0]-0.5)
