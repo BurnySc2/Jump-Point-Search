@@ -25,9 +25,9 @@ if __name__ == "__main__":
     print(height, width, pathing_grid.shape)
 
     t0 = time.time()
-    precomputed = jps_precompute(pathing_grid, wall_value=9)
+    precomputed = jps_precompute(pathing_grid, wall=9)
     t1 = time.time()
-    print(f"{len(precomputed[0])} jump points, time taken: {round(t1-t0, 3)}s, jump points: {precomputed[0]}")
+    print(f"{len(precomputed[0])} jump points, time taken: {round(t1-t0, 3)} s")
     # np.save("jump_points", list(precomputed[0]))
     # # np.save("no_connection", list(a[1]))
 
@@ -64,10 +64,10 @@ if __name__ == "__main__":
 
     # result = jps_search(p1, p2, test, wall_value=9)
     t0 = time.time()
-    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, precomputed, debug=False)
+    result = jps_search(spawn1_correct, spawn2_correct, pathing_grid, precomputed, debug=True)
     t1 = time.time()
 
-    print(f"Time: {t1-t0}, Path: {result}")
+    print(f"Path calculated!\nTime: {t1-t0}\nPath: {result}")
 
     np.save("path", result)
 
